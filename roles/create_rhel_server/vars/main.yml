@@ -1,0 +1,5 @@
+---
+api_host: "{{ (ansible_data.proxmox_url | split('://'))[1] }}"
+api_user: "{{ ansible_data.proxmox_user }}"
+api_token_id: "{{ ansible_data.proxmox_token_id }}"
+api_token_secret: "{{ ansible_data.proxmox_token_secret }}"

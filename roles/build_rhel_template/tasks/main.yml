@@ -1,0 +1,88 @@
+---
+- name: Check proxmox for templates
+  community.general.proxmox_vm_info:
+    api_host: "{{ api_host }}"
+    api_user: "{{ api_user }}"
+    api_token_id: "{{ api_token_id }}"
+    api_token_secret: "{{ api_token_secret }}"
+    name: "{{ build_rhel_template_name }}"
+  register: template_info
+
+- name: Confirmation Statment
+  ansible.builtin.debug:
+    msg: "Required Image {{ build_rhel_template_name }} alredy exists"
+  when: template_info.proxmox_vms | length != 0
+
+- name: Make sure template is present
+  when: template_info.proxmox_vms | length == 0
+  block:
+    - name: Copy role files folder into tmp folder
+      ansible.builtin.copy:
+        src: "{{ (lookup('env', 'PWD')) ~ '/roles/build_rhel_template/files/' }}"
+        dest: "{{ (lookup('env', 'PWD')) ~ '/tmp/' }}"
+        mode: "0755"
+
+    - name: Write ansible yml file with extra packages
+      ansible.builtin.template:
+        src: "{{ (lookup('env', 'PWD')) ~ '/roles/build_rhel_template/templates/playbook.yml.j2' }}"
+        dest: "{{ (lookup('env', 'PWD')) ~ '/tmp/playbook.yml' }}"
+        mode: "0755"
+
+    - name: Write variables packer file
+      ansible.builtin.template:
+        src: "{{ (lookup('env', 'PWD')) ~ '/roles/build_rhel_template/templates/rhel9.varpkr.hcl.j2' }}"
+        dest: "{{ (lookup('env', 'PWD')) ~ '/tmp/rhel9.varpkr.hcl' }}"
+        mode: "0755"
+
+    - name: Add variables into config file
+      ansible.builtin.lineinfile:
+        path: "{{ (lookup('env', 'PWD')) ~ '/tmp/http/ks.cfg' }}"
+        regexp: "^{{ item.key }}"
+        line: "{{ item.value }}"
+        mode: "0755"
+      with_items:
+        - key: "rootpw"
+          value: 'rootpw --lock --plaintext "{{ password }}"'
+        - key: "user"
+          value: 'user --name={{ user }} --password="{{ password }}" --groups=wheel --home=/home/{{ user }} --shell=/bin/zsh --plaintext'
+        - key: "sshkey"
+          value: 'sshkey --username={{ user }} "{{ ssh_key }}"'
+        - key: "firewall"
+          value: 'firewall --enabled --{{ build_rhel_template_firewall_services | join(" --") }} --port="{{ build_rhel_template_firewall_ports | join(",") }}"'
+        - key: "rhsm"
+          value: 'rhsm --organization="{{ rhel_organization_id }}" --activation-key="{{ rhel_activation_key }}" --connect-to-insights'
+
+    - name: Add repos into config file
+      ansible.builtin.lineinfile:
+        path: "{{ (lookup('env', 'PWD')) ~ '/tmp/http/ks.cfg' }}"
+        regexp: "^repo"
+        line: "repo --name={{ item }}"
+        insertafter: "autopart"
+        mode: "0755"
+      with_items: "{{ build_rhel_template_repos }}"
+
+    - name: Add packages into config file
+      ansible.builtin.lineinfile:
+        path: "{{ (lookup('env', 'PWD')) ~ '/tmp/http/ks.cfg' }}"
+        regexp: "^{{ item }}"
+        line: "{{ item }}"
+        insertafter: "%packages"
+        mode: "0755"
+      with_items: "{{ build_rhel_template_packages }}"
+
+    - name: Run Packer to Build Template
+      ansible.builtin.command:
+        cmd: packer build -var-file=rhel9.varpkr.hcl .
+        chdir: "{{ (lookup('env', 'PWD')) ~ '/tmp' }}"
+      changed_when: packer_output.rc != 0
+      register: packer_output
+
+  always:
+    - name: Delete tmp folder
+      ansible.builtin.file:
+        path: "{{ (lookup('env', 'PWD')) ~ '/tmp/' }}"
+        state: absent
+
+    - name: Print packer result
+      ansible.builtin.debug:
+        msg: "{{ lookup('ansible.builtin.template', 'templates/build_result.j2') }}"

@@ -1,0 +1,104 @@
+---
+- name: Check proxmox templates existance
+  community.general.proxmox_vm_info:
+    api_host: "{{ api_host }}"
+    api_user: "{{ api_user }}"
+    api_token_id: "{{ api_token_id }}"
+    api_token_secret: "{{ api_token_secret }}"
+    name: "{{ create_rhel_server_template }}"
+  register: template_info
+
+- name: Template Confirmation Statment
+  ansible.builtin.debug:
+    msg: "{{ lookup('ansible.builtin.template', 'templates/check_template.j2') }}"
+  failed_when: template_info.proxmox_vms | length == 0
+
+- name: Check proxmox server existance
+  community.general.proxmox_vm_info:
+    api_host: "{{ api_host }}"
+    api_user: "{{ api_user }}"
+    api_token_id: "{{ api_token_id }}"
+    api_token_secret: "{{ api_token_secret }}"
+    name: "{{ create_rhel_server_vm_name }}"
+  register: server_info
+
+- name: Create RHEL9 Server from template on proxmox
+  community.general.proxmox_kvm:
+    api_host: "{{ api_host }}"
+    api_user: "{{ api_user }}"
+    api_token_id: "{{ api_token_id }}"
+    api_token_secret: "{{ api_token_secret }}"
+    clone: "{{ clone | default(create_rhel_server_template) }}"
+    node: "{{ node | default(create_rhel_server_node) }}"
+    name: "{{ create_rhel_server_vm_name }}"
+    state: present
+    storage: "{{ storage_pool | default(create_rhel_server_storage_pool) }}"
+  when: server_info.proxmox_vms | length == 0
+  register: server_result
+  notify:
+    - Wait_before
+    - Start_vm
+
+- name: Server Confirmation Statment
+  ansible.builtin.debug:
+    msg: "{{ lookup('ansible.builtin.template', 'templates/check_server.j2') }}"
+
+- name: Flush handlers
+  ansible.builtin.meta: flush_handlers
+
+- name: Update RHEL9 Server cpu and memory
+  community.general.proxmox_kvm:
+    api_host: "{{ api_host }}"
+    api_user: "{{ api_user }}"
+    api_token_id: "{{ api_token_id }}"
+    api_token_secret: "{{ api_token_secret }}"
+    update: true
+    node: "{{ node | default(create_rhel_server_node) }}"
+    cpu: "{{ cpu_type | default(create_rhel_server_cpu_type) }}"
+    cores: "{{ cores | default(create_rhel_server_cores) }}"
+    sockets: "{{ sockets | default(create_rhel_server_sockets) }}"
+    memory: "{{ memory | default(create_rhel_server_memory) }}"
+    name: "{{ create_rhel_server_vm_name }}"
+    autostart: true
+    onboot: true
+    scsihw: virtio-scsi-single
+    storage: "{{ storage_pool | default(create_rhel_server_storage_pool) }}"
+    tags: "{{ create_rhel_server_tags }}"
+    timeout: 300
+  notify:
+    - Start_vm
+    - Restart_vm
+    - Wait_after
+
+- name: Update RHEL9 Server disk
+  community.general.proxmox_disk:
+    api_host: "{{ api_host }}"
+    api_user: "{{ api_user }}"
+    api_token_id: "{{ api_token_id }}"
+    api_token_secret: "{{ api_token_secret }}"
+    name: "{{ create_rhel_server_vm_name }}"
+    disk: "{{ create_rhel_server_disk_type }}0"
+    size: "{{ create_rhel_server_disk_size }}"
+    state: present
+    create: disabled
+  notify:
+    - Restart_vm
+    - Wait_after
+
+- name: Flush handlers
+  ansible.builtin.meta: flush_handlers
+
+- name: Update RHEL9 Server network
+  community.general.proxmox_nic:
+    api_host: "{{ api_host }}"
+    api_user: "{{ api_user }}"
+    api_token_id: "{{ api_token_id }}"
+    api_token_secret: "{{ api_token_secret }}"
+    name: "{{ create_rhel_server_vm_name }}"
+    interface: net0
+    mac: "{{ create_rhel_server_mac_address }}"
+    bridge: "{{ create_rhel_server_network_bridge }}"
+    model: "{{ create_rhel_server_network_model }}"
+    firewall: "{{ create_rhel_server_network_firewall }}"
+    state: present
+  notify: Restart_vm

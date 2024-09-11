@@ -1,0 +1,49 @@
+---
+- name: Prepare Ansible Automation Platform Server
+  hosts: localhost
+
+  vars_files:
+    - host_vars/ansible.yaml
+  roles:
+    - name: Create RHEL9 Template
+      role: build_rhel_template
+
+    - name: Create Foreman Server
+      role: create_rhel_server
+
+- name: Prepare Foreman Server
+  hosts: localhost
+
+  vars_files:
+    - host_vars/foreman.yaml
+  roles:
+    - name: Create RHEL9 Template
+      role: build_rhel_template
+
+    - name: Create Foreman Server
+      role: create_rhel_server
+
+- name: Refresh Inventory
+  hosts: localhost
+
+  tasks:
+    - name: Refresh Inventory
+      ansible.builtin.meta: refresh_inventory
+
+- name: Install Ansible Automation Platform
+  hosts: ansible
+  become: true
+
+  roles:
+    - infra.aap_utilities.aap_setup_download
+    - infra.aap_utilities.aap_setup_prepare
+    - infra.aap_utilities.aap_setup_install
+
+- name: Install Foreman and Katello
+  hosts: foreman
+  become: true
+
+  roles:
+    - role: theforeman.operations.foreman_repositories
+    - role: theforeman.operations.puppet_repositories
+    - role: theforeman.operations.installer

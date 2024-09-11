@@ -1,0 +1,74 @@
+mac_address: BC:24:11:3D:D6:AC
+
+rhel_version: "9.4"
+rhel_version_major: "{{ rhel_version.split('.')[0] }}"
+rhel_organization_id: "{{ lookup('community.hashi_vault.vault_read', 'kv/data/ansible').data.data.rhel_organization_id }}"
+rhel_activation_key: "{{ lookup('community.hashi_vault.vault_read', 'kv/data/ansible').data.data['rhel_activation_key_' ~ rhel_version_major] }}"
+build_rhel_template_iso_file: "{{ 'ceph-iso:iso/rhel-' ~ rhel_version ~ '-x86_64-dvd.iso' }}"
+build_rhel_template_name: "{{ 'RHEL' ~ rhel_version_major ~ 'Template' }}"
+build_rhel_template_rhel_version: "{{ rhel_version_major }}"
+build_rhel_template_firewall_services:
+  - http
+  - ftp
+  - smtp
+  - ssh
+build_rhel_template_firewall_ports:
+  - 22
+  - 80
+  - 443
+  - 5432
+  - "8000-9000"
+build_rhel_template_packages:
+  - "@^server-product-environment"
+  - "@infiniband"
+  - "@network-tools"
+  - openssh-server
+  - openssh
+  - katello-host-tools-tracer
+  - qemu-guest-agent
+  - python-setuptools
+  - zsh
+  - git
+build_rhel_template_repos:
+  - satellite-client-6-for-rhel-9-x86_64-rpms
+  - ansible-automation-platform-2.4-for-rhel-9-x86_64-rpms
+  - rhel-9-for-x86_64-supplementary-rpms
+create_rhel_server_template: "{{ build_rhel_template_name}}"
+create_rhel_server_vm_name: "ansible"
+create_rhel_server_cores: 4
+create_rhel_server_sockets: 2
+create_rhel_server_memory: 8196
+create_rhel_server_disk_size: "60G"
+create_rhel_server_storage_pool: "ceph-vol"
+create_rhel_server_disk_type: "virtio"
+create_rhel_server_network_bridge: "vmbr0"
+create_rhel_server_network_firewall: false
+create_rhel_server_mac_address: "{{ mac_address }}"
+create_rhel_server_tags:
+  - standalone_vm
+
+aap_setup_down_offline_token: "{{ lookup('community.hashi_vault.vault_read', 'kv/data/ansible').data.data.aap_token }}"
+aap_setup_down_type: setup-bundle
+aap_setup_inst_force: true
+automationhub_disable_https: true
+controller_validate_certs: false
+aap_setup_prep_inv_nodes:
+  automationcontroller:
+    192.168.30.24:
+
+aap_setup_prep_inv_vars:
+  all:
+    ansible_connection: local
+    controller_validate_certs: false
+    ansible_user: sergei
+    ansible_become: true
+    ansible_password: "{{ lookup('community.hashi_vault.vault_read', 'kv/data/ansible').data.data.password }}"
+    ansible_sudo_pass: "{{ lookup('community.hashi_vault.vault_read', 'kv/data/ansible').data.data.password_root }}"
+    ansible_ssh_private_key_file: ansible_ssh_private_key_file
+    admin_password: "{{ lookup('community.hashi_vault.vault_read', 'kv/data/ansible').data.data.password }}"
+    pg_host: ""
+    pg_port: ""
+    pg_database: awx
+    pg_username: awx
+    pg_password: "{{ lookup('community.hashi_vault.vault_read', 'kv/data/ansible').data.data.password }}"
+    pg_sslmode: prefer

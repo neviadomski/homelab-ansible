@@ -1,0 +1,10 @@
+{% if server_info.proxmox_vms | length != 0 %}
+Server '{{ create_rhel_server_vm_name }}' exists. Continue.
+{% else %}
+Server '{{ create_rhel_server_vm_name }}' didn't exist.
+    {% if server_result is failed %}
+    We had some erors on Server '{{ create_rhel_server_vm_name }}' creation.
+    {% else %}
+    Server '{{ create_rhel_server_vm_name }}' was created. Continue.
+    {% endif %}
+{% endif %}

@@ -1,0 +1,16 @@
+---
+build_rhel_template_iso_file: "ceph-iso:iso/rhel-9.4-x86_64-dvd.iso"
+build_rhel_template_name: "RHEL9Template"
+build_rhel_template_rhel_version: "9"
+
+build_rhel_template_user: "sergei"
+build_rhel_template_proxmox_node: "proxmox"
+
+build_rhel_template_cpu_type: "x86-64-v2-AES"
+build_rhel_template_cores: 4
+build_rhel_template_sockets: 2
+build_rhel_template_memory: 8192
+build_rhel_template_disk_size: "40G"
+build_rhel_template_storage_pool: "ceph-vol"
+build_rhel_template_disk_type: "virtio"
+build_rhel_template_network_bridge: "vmbr0"

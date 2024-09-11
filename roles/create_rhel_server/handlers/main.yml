@@ -1,0 +1,28 @@
+---
+- name: Wait_before
+  ansible.builtin.wait_for:
+    timeout: 20
+
+- name: Restart_vm
+  community.general.proxmox_kvm:
+    api_host: "{{ api_host }}"
+    api_user: "{{ api_user }}"
+    api_token_id: "{{ api_token_id }}"
+    api_token_secret: "{{ api_token_secret }}"
+    state: restarted
+    node: "{{ node | default(create_rhel_server_node) }}"
+    name: "{{ create_rhel_server_vm_name }}"
+
+- name: Start_vm
+  community.general.proxmox_kvm:
+    api_host: "{{ api_host }}"
+    api_user: "{{ api_user }}"
+    api_token_id: "{{ api_token_id }}"
+    api_token_secret: "{{ api_token_secret }}"
+    state: started
+    node: "{{ node | default(create_rhel_server_node) }}"
+    name: "{{ create_rhel_server_vm_name }}"
+
+- name: Wait_after
+  ansible.builtin.wait_for:
+    timeout: 60

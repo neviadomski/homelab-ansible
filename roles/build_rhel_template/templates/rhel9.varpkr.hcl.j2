@@ -1,0 +1,16 @@
+proxmox_host = "{{ ansible_data.proxmox_url ~ '/api2/json' }}"
+proxmox_user = "{{ api_user ~ '!' ~ api_token_id }}"
+proxmox_token = "{{ api_token_secret }}"
+proxmox_node = "{{ build_rhel_template_proxmox_node }}"
+iso_file = "{{ build_rhel_template_iso_file }}"
+cpu_type = "{{ build_rhel_template_cpu_type}}"
+cores = {{ build_rhel_template_cores }}
+sockets = {{ build_rhel_template_sockets }}
+memory = {{ build_rhel_template_memory }}
+disk_size = "{{ build_rhel_template_disk_size }}"
+storage_pool = "{{ build_rhel_template_storage_pool }}"
+disk_type = "{{ build_rhel_template_disk_type }}"
+network_bridge = "{{ build_rhel_template_network_bridge }}"
+vm_name = "{{ build_rhel_template_name }}"
+ssh_user = "{{ user }}"
+ssh_pass = "{{ password }}"

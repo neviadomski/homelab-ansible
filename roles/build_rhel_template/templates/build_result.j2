@@ -1,0 +1,5 @@
+{% if packer_output is failed %}
+Something went wrong during Template {{ build_rhel_template_name }} building.
+{% else %}
+Template {{ build_rhel_template_name }}  successfuly built.
+{% endif %}

@@ -1,0 +1,29 @@
+# Ignore Ansible generated files
+*.retry
+*.log
+.env
+
+# Ignore Ansible vault password file
+vault_password.txt
+
+# Ignore Ansible fact cache
+.ansible/
+
+# Ignore Ansible roles dependencies
+roles/*/molecule/
+roles/*/tests/
+
+# Ignore Ansible virtual environment
+.venv/
+
+# Ignore Ansible cache
+.ansible/
+
+# Ignore Ansible temporary files
+*.swp
+*.swo
+*.pyc
+
+# VSCode
+.vscode/
+

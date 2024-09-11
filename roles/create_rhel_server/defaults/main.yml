@@ -1,0 +1,14 @@
+---
+create_rhel_server_template: "RHEL9Template"
+create_rhel_server_node: "proxmox"
+create_rhel_server_user: "sergei"
+create_rhel_server_cpu_type: "x86-64-v2-AES"
+create_rhel_server_cores: 4
+create_rhel_server_sockets: 2
+create_rhel_server_memory: 8192
+create_rhel_server_disk_size: "40G"
+create_rhel_server_storage_pool: "ceph-vol"
+create_rhel_server_disk_type: "virtio"
+create_rhel_server_network_bridge: "vmbr0"
+create_rhel_server_network_model: "virtio"
+create_rhel_server_network_firewall: false

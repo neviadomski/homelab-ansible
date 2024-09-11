@@ -1,0 +1,56 @@
+mac_address: BC:24:11:3D:D6:AD
+
+rhel_version: "9.4"
+rhel_version_major: "{{ rhel_version.split('.')[0] }}"
+rhel_organization_id: "{{ lookup('community.hashi_vault.vault_read', 'kv/data/ansible').data.data.rhel_organization_id }}"
+rhel_activation_key: "{{ lookup('community.hashi_vault.vault_read', 'kv/data/ansible').data.data['rhel_activation_key_' ~ rhel_version_major] }}"
+build_rhel_template_iso_file: "{{ 'ceph-iso:iso/rhel-' ~ rhel_version ~ '-x86_64-dvd.iso' }}"
+build_rhel_template_name: "{{ 'RHEL' ~ rhel_version_major ~ 'Template' }}"
+build_rhel_template_rhel_version: "{{ rhel_version_major }}"
+build_rhel_template_firewall_services:
+  - http
+  - ftp
+  - smtp
+  - ssh
+build_rhel_template_firewall_ports:
+  - 22
+  - 80
+  - 443
+  - 5432
+  - "8000-9000"
+build_rhel_template_packages:
+  - "@^server-product-environment"
+  - "@infiniband"
+  - "@network-tools"
+  - openssh-server
+  - openssh
+  - katello-host-tools-tracer
+  - qemu-guest-agent
+  - python-setuptools
+  - zsh
+  - git
+build_rhel_template_repos:
+  - satellite-client-6-for-rhel-9-x86_64-rpms
+  - ansible-automation-platform-2.4-for-rhel-9-x86_64-rpms
+  - rhel-9-for-x86_64-supplementary-rpms
+create_rhel_server_template: "{{ build_rhel_template_name}}"
+create_rhel_server_vm_name: "foreman"
+create_rhel_server_cores: 4
+create_rhel_server_sockets: 2
+create_rhel_server_memory: 20480
+create_rhel_server_disk_size: "60G"
+create_rhel_server_storage_pool: "ceph-vol"
+create_rhel_server_disk_type: "virtio"
+create_rhel_server_network_bridge: "vmbr0"
+create_rhel_server_network_firewall: false
+create_rhel_server_mac_address: "{{ mac_address }}"
+create_rhel_server_tags:
+  - standalone_vm
+foreman_repositories_version: "3.11"
+foreman_repositories_katello_version: "4.13"
+foreman_puppet_repositories_version: 7
+foreman_installer_scenario: katello
+foreman_installer_package: foreman-installer-katello
+foreman_installer_options:
+  - '--foreman-initial-organization "HomeLab"'
+  - "--foreman-initial-admin-password changeme"

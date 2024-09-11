@@ -1,0 +1,5 @@
+{% if template_info.proxmox_vms | length != 0 %}
+Template {{ create_rhel_server_template }} exists. Continue.
+{% else %}
+Template {{ create_rhel_server_template }} doesn't exist.
+{% endif %}
