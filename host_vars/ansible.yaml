@@ -27,6 +27,7 @@ build_rhel_template_packages:
   - katello-host-tools-tracer
   - qemu-guest-agent
   - python-setuptools
+  - ansible-builder
   - zsh
   - git
 build_rhel_template_repos:

@@ -1,2 +1,2 @@
 ansible_user: sergei
-ansible_connection: ssh
+ansible_connection: local
